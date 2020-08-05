@@ -1,2 +1,8 @@
 ---
-# tasks file for template
+- name: RedHat
+  include: redhat.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Windows
+  include: windows.yml
+  when: ansible_os_family == 'Windows'

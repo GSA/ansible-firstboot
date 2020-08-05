@@ -1,0 +1,28 @@
+- name: changing hostname to {{ inventory_hostname }}
+  win_hostname:
+    name: '{{ inventory_hostname }}'
+  register: hostname
+
+- name: reboot
+  win_reboot:
+  when: hostname.reboot_required
+
+- name: query filesystem for new disk
+  win_disk_facts:
+
+- name: initialize disk
+  win_shell: "Initialize-Disk -Number {{ disk_number }}"
+  when: ansible_disks[disk_number].guid is none
+
+- name: create partition
+  win_partition:
+    drive_letter: auto
+    partition_size: -1
+    disk_number: "{{ disk_number }}"
+  when: ansible_disks[disk_number].guid is none
+
+- name: format the partition as ntfs
+  win_format:
+    drive_letter: auto
+    file_system: ntfs
+  when: ansible_disks[disk_number].guid is none

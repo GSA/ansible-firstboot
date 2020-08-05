@@ -1,2 +1,2 @@
 ---
-# defaults file for template
+disk_number: "1" # default disk_number

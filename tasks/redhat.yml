@@ -1,0 +1,35 @@
+- name: waiting for {{ inventory_hostname }} become reachable/usable
+  wait_for_connection:
+
+- name: changing hostname to {{ inventory_hostname }}
+  hostname:
+    name: '{{ inventory_hostname }}'
+  register: hostname
+
+- name: rebooting {{ inventory_hostname }}
+  reboot:
+  when: hostname.reboot_required
+
+- name: query filesystem for /dev/nvme1n1
+  shell: df -T | grep /dev/nvme1n1
+  register: filesystem
+  ignore_errors: yes
+  changed_when: false
+
+- filesystem:
+    fstype: xfs
+    dev: /dev/nvme1n1
+  when: "filesystem.rc == 1"
+
+- name: show /dev/nvme1n1 mountpoint
+  shell: lsblk /dev/nvme1n1 -n --output MOUNTPOINT
+  register: mountpoint
+  ignore_errors: yes
+  changed_when: false
+
+- mount:
+    fstype: xfs
+    src: /dev/nvme1n1
+    path: /app
+    state: mounted
+  when: mountpoint.stdout == ""
