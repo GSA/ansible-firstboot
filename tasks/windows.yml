@@ -10,19 +10,27 @@
 - name: query filesystem for new disk
   win_disk_facts:
 
+- name: abort when the disk number does not exist
+  fail:
+    msg: "disk does not exist. (disk_number = {{ disk_number }})"
+  when: ansible_disks[disk_number] is undefined
+
+- name: bring disk online
+  win_shell: "Set-Disk -Number {{ disk_number }} -IsOffline $False"
+
+- name: fix readonly from disk
+  win_shell: "Set-Disk -Number {{ disk_number }} -IsReadonly $False"
+
 - name: initialize disk
   win_shell: "Initialize-Disk -Number {{ disk_number }}"
-  when: ansible_disks[disk_number].guid is none
 
 - name: create partition
   win_partition:
     drive_letter: auto
     partition_size: -1
     disk_number: "{{ disk_number }}"
-  when: ansible_disks[disk_number].guid is none
 
 - name: format the partition as ntfs
   win_format:
-    drive_letter: auto
+    drive_letter: D
     file_system: ntfs
-  when: ansible_disks[disk_number].guid is none
