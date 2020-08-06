@@ -6,10 +6,6 @@
     name: '{{ inventory_hostname }}'
   register: hostname
 
-- name: rebooting {{ inventory_hostname }}
-  reboot:
-  when: hostname.reboot_required
-
 - name: query filesystem for /dev/nvme1n1
   shell: df -T | grep /dev/nvme1n1
   register: filesystem

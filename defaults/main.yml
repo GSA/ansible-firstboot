@@ -1,2 +1,2 @@
 ---
-disk_number: "1" # default disk_number
+device_id: "1" # default disk_number

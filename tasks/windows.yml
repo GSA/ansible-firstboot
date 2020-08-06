@@ -10,11 +10,6 @@
 - name: query filesystem for new disk
   win_disk_facts:
 
-- name: abort when the disk number does not exist
-  fail:
-    msg: "disk does not exist. (disk_number = {{ disk_number }})"
-  when: ansible_disks[disk_number] is undefined
-
 - name: bring disk online
   win_shell: "Set-Disk -Number {{ disk_number }} -IsOffline $False"
 
