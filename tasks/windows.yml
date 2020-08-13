@@ -1,3 +1,11 @@
+- name: set the default shell to powershell
+  win_regedit:
+    path: HKLM:\SOFTWARE\OpenSSH
+    name: DefaultShell
+    data: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
+    type: string
+    state: present
+
 - name: changing hostname to {{ inventory_hostname }}
   win_hostname:
     name: '{{ inventory_hostname }}'
@@ -6,26 +14,3 @@
 - name: reboot
   win_reboot:
   when: hostname.reboot_required
-
-- name: query filesystem for new disk
-  win_disk_facts:
-
-- name: bring disk online
-  win_shell: "Set-Disk -Number {{ disk_number }} -IsOffline $False"
-
-- name: fix readonly from disk
-  win_shell: "Set-Disk -Number {{ disk_number }} -IsReadonly $False"
-
-- name: initialize disk
-  win_shell: "Initialize-Disk -Number {{ disk_number }}"
-
-- name: create partition
-  win_partition:
-    drive_letter: auto
-    partition_size: -1
-    disk_number: "{{ disk_number }}"
-
-- name: format the partition as ntfs
-  win_format:
-    drive_letter: D
-    file_system: ntfs
