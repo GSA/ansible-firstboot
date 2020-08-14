@@ -1,2 +1,2 @@
 ---
-device_id: "1" # default disk_number
+redhat_agent_dependencies_url: "" #artifactory url for installers

@@ -1,31 +1,46 @@
-- name: waiting for {{ inventory_hostname }} become reachable/usable
+- name: wait for {{ inventory_hostname }}
   wait_for_connection:
 
-- name: changing hostname to {{ inventory_hostname }}
+- name: change hostname to {{ inventory_hostname }}
   hostname:
     name: '{{ inventory_hostname }}'
   register: hostname
 
-- name: query filesystem for /dev/nvme1n1
-  shell: df -T | grep /dev/nvme1n1
-  register: filesystem
-  ignore_errors: yes
-  changed_when: false
+- name: install agent dependencies (redhat)
+  yum:
+    name: '{{ artifactory_url }}{{ item.name }}'
+    state: installed
+    validate_certs: no
+    disable_plugin: "yum-rhn-plugin"
+    disablerepo: "rhel-8-appstream-rhui-rpms,rhel-8-baseos-rhui-rpms,rhui-client-config-server-8"
+  with_items:
+    - '{{ redhat_agent_dependencies }}'
 
-- filesystem:
-    fstype: xfs
-    dev: /dev/nvme1n1
-  when: "filesystem.rc == 1"
+- name: look for nvme devices
+  command: nvme list
+  register: nvme_exist
+  changed_when: False
+  check_mode: no
 
-- name: show /dev/nvme1n1 mountpoint
-  shell: lsblk /dev/nvme1n1 -n --output MOUNTPOINT
-  register: mountpoint
-  ignore_errors: yes
-  changed_when: false
+- name: map-ebs-nvme automation
+  block:
+    - name: copy map-ebs-nvme
+      copy:
+        src: files/map-ebs-nvme.sh
+        dest: "/usr/local/bin/map-ebs-nvme"
+        owner: root
+        group: root
+        mode: 0755
 
-- mount:
-    fstype: xfs
-    src: /dev/nvme1n1
-    path: /app
-    state: mounted
-  when: mountpoint.stdout == ""
+    - name: configure map-ebs-nvme rules
+      copy:
+        src: files/map-ebs-nvme.rules
+        dest: "/etc/udev/rules.d/map-ebs-nvme.rules"
+        owner: root
+        group: root
+        mode: 0644
+
+    - name: run map-ebs-nvme
+      command: /usr/local/bin/map-ebs-nvme
+
+  when: not(nvme_exist.stdout | regex_search('No NVMe devices detected.'))
