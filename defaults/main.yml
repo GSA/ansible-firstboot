@@ -3,7 +3,8 @@
 redhat_agent_dependencies_url: "" #artifactory url for installers
 
 # windows
-domain_name: ""
-domain_ou: ""
+domain_name: "" # Domain DNS Name
+domain_ou: "" # OU Path
 domain_user: ""
 domain_pass: ""
+windows_users: ""
