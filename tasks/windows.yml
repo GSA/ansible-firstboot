@@ -6,7 +6,7 @@
     type: string
     state: present
 
-- name: changing hostname to {{ inventory_hostname }}
+- name: change hostname to {{ inventory_hostname }}
   win_hostname:
     name: '{{ inventory_hostname }}'
   register: hostname
@@ -14,3 +14,25 @@
 - name: reboot
   win_reboot:
   when: hostname.reboot_required
+
+- name: add {{ inventory_hostname }} to the {{ domain_name }} domain
+  win_domain_membership:
+    dns_domain_name: '{{ domain_name }}'
+    hostname: '{{ inventory_hostname }}'
+    domain_admin_user: '{{ domain_user }}'
+    domain_admin_password: '{{ domain_pass }}'
+    domain_ou_path: '{{ domain_ou }}'
+    state: domain
+  register: domain_state
+
+- win_reboot:
+  when: domain_state.reboot_required
+
+- name: add domain users to a local remote desktop users group
+  win_group_membership:
+    name: Remote Desktop Users
+    members:
+      - '{{ domain_name }}\{{ item.name }}''
+    state: present
+  with_items:
+    - '{{ windows_users }}'

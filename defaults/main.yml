@@ -1,2 +1,9 @@
 ---
+# redhat
 redhat_agent_dependencies_url: "" #artifactory url for installers
+
+# windows
+domain_name: ""
+domain_ou: ""
+domain_user: ""
+domain_pass: ""
