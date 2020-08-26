@@ -1,10 +1,12 @@
 ---
+skip_user_creation: [] # accounts to skip
+
 # redhat
-redhat_agent_dependencies_url: "" #artifactory url for installers
+redhat_agent_dependencies_url: "" # artifactory url for installers
 
 # windows
-domain_name: "" # Domain DNS Name
-domain_ou: "" # OU Path
-domain_user: ""
-domain_pass: ""
-windows_users: ""
+windows_domain_name: "" # domain dns name
+windows_domain_ou: "" # domain ou path
+windows_domain_user: "" # domain default user
+windows_domain_pass: "" # domain default password
+windows_domain_admins: "" # domain default admins group to add to local administrators and remote desktop users
