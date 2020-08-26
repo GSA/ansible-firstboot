@@ -1,11 +1,14 @@
+# base configuration
 - name: wait for {{ inventory_hostname }}
   wait_for_connection:
 
+# hostname configuration
 - name: change hostname to {{ inventory_hostname }}
   hostname:
     name: '{{ inventory_hostname }}'
   register: hostname
 
+# dependency configuration
 - name: install agent dependencies (redhat)
   yum:
     name: '{{ artifactory_url }}{{ item.name }}'
@@ -16,6 +19,7 @@
   with_items:
     - '{{ redhat_agent_dependencies }}'
 
+# drive configuration
 - name: look for nvme devices
   command: nvme list
   register: nvme_exist
