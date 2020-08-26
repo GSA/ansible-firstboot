@@ -1,6 +1,5 @@
 ---
 skip_user_creation: [] # accounts to skip
-
 # redhat
 redhat_agent_dependencies_url: "" # artifactory url for installers
 
