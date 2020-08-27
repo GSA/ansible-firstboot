@@ -1,3 +1,7 @@
+# wait for connection
+- name: wait for {{ inventory_hostname }}
+  wait_for_connection:
+
 # base configuration
 - name: set the default shell to powershell
   win_regedit:
