@@ -51,13 +51,13 @@
   when: hostname.reboot_required
 
 # domain configuration
-- name: add {{ inventory_hostname }} to the {{ windows_domain_name }} domain
+- name: add {{ inventory_hostname }} to the domain
   win_domain_membership:
-    dns_domain_name: '{{ windows_domain_name }}'
+    dns_domain_name: '{{ qaent_domain.domain }}'
     hostname: '{{ inventory_hostname }}'
-    domain_admin_user: '{{ windows_domain_user }}'
-    domain_admin_password: '{{ windows_domain_pass }}'
-    domain_ou_path: '{{ windows_domain_ou }}'
+    domain_admin_user: '{{ qaent_domain.username }}'
+    domain_admin_password: '{{ qaent_domain.password }}'
+    domain_ou_path: '{{ qaent_domain.ou }}'
     state: domain
   register: domain_state
 
