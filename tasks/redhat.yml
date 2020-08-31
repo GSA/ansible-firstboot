@@ -15,7 +15,7 @@
     state: installed
     validate_certs: no
     disable_plugin: "yum-rhn-plugin"
-    disablerepo: "rhel-8-appstream-rhui-rpms,rhel-8-baseos-rhui-rpms,rhui-client-config-server-8"
+    disablerepo: "*"
   with_items:
     - '{{ redhat_agent_dependencies }}'
 
