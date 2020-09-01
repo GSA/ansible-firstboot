@@ -63,3 +63,14 @@
 
 - win_reboot:
   when: domain_state.reboot_required
+
+# add local debug user for testing and agent validation
+- name: create local user for debug purposes
+  win_user:
+    name: '{{ local_users.username }}'
+    password: '{{ local_users.password }}'
+    state: present
+    description: "local debug user for testing and agent validation"
+    groups:
+      - '{{ local_users.group1 }}'
+      - '{{ local_users.group2 }}'
