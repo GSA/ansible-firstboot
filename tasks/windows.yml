@@ -40,6 +40,11 @@
     state: present
     enabled: yes
 
+# setting eastern timezone to avoid timestamp issues with the ENT domain
+- name: set timezone to 'Eastern Standard Time' (GMT-05:00)
+  win_timezone:
+    timezone: Eastern Standard Time
+
 # hostname configuration
 - name: change hostname to {{ inventory_hostname }}
   win_hostname:
