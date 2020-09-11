@@ -45,16 +45,6 @@
   win_timezone:
     timezone: Eastern Standard Time
 
-# hostname configuration
-- name: change hostname to {{ inventory_hostname }}
-  win_hostname:
-    name: '{{ inventory_hostname }}'
-  register: hostname
-
-- name: reboot
-  win_reboot:
-  when: hostname.reboot_required
-
 # domain configuration
 - name: add {{ inventory_hostname }} to the domain
   win_domain_membership:
