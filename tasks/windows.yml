@@ -55,19 +55,19 @@
   win_reboot:
   when: hostname.reboot_required
 
-# domain configuration
-- name: add {{ inventory_hostname }} to the domain
-  win_domain_membership:
-    dns_domain_name: '{{ ent_domain.domain }}'
-    hostname: '{{ inventory_hostname }}'
-    domain_admin_user: '{{ ent_domain.username }}'
-    domain_admin_password: '{{ ent_domain.password }}'
-    domain_ou_path: '{{ ent_domain.ou }}'
-    state: domain
-  register: domain_state
+# domain configuration (commenting out until transit gateway or domain traffic approval completed)
+#- name: add {{ inventory_hostname }} to the domain
+#  win_domain_membership:
+#    dns_domain_name: '{{ ent_domain.domain }}'
+#    hostname: '{{ inventory_hostname }}'
+#    domain_admin_user: '{{ ent_domain.username }}'
+#    domain_admin_password: '{{ ent_domain.password }}'
+#    domain_ou_path: '{{ ent_domain.ou }}'
+#    state: domain
+#  register: domain_state
 
-- win_reboot:
-  when: domain_state.reboot_required
+#- win_reboot:
+#  when: domain_state.reboot_required
 
 # add local debug user for testing and agent validation
 - name: create local user for debug purposes
