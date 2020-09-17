@@ -7,3 +7,8 @@ windows_domain_name: "" # domain dns name
 windows_domain_ou: "" # domain ou path
 windows_domain_user: "" # domain default user
 windows_domain_pass: "" # domain default password
+windows_cert_path: "" # default certificate path
+
+# common
+local_key_path: "/etc/pki/tls/private" # default key path
+local_cert_path: "/etc/pki/tls/certs" # default certificate path
