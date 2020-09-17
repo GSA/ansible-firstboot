@@ -2,13 +2,13 @@
 
 - name: Current keypair
   authorized_key:
-    user: "{{ lookup('env','USER') }}"
+    user: "{{ ansible_user }}"
     state: present
     key: "{{ lookup('file', '~/.ssh/current_id_rsa.pub') }}"
 
 - name: Previous keypair
   authorized_key:
-    user: "{{ lookup('env','USER') }}"
+    user: "{{ ansible_user }}"
     state: absent
     key: "{{ lookup('file', '~/.ssh/previous_id_rsa.pub') }}"
 
