@@ -1,6 +1,8 @@
 # base configuration
 - name: wait for {{ inventory_hostname }}
   wait_for_connection:
+  delay: 60
+  timeout: 300
 
 # hostname configuration
 - name: change hostname to {{ inventory_hostname }}
