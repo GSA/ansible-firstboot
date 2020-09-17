@@ -19,6 +19,17 @@
   with_items:
     - '{{ redhat_agent_dependencies }}'
 
+# acm certificate rotation checking
+- name: copy certificates to certificate store
+  aws_acm_autorenew:
+     hostname: '{{ inventory_hostname }}'
+     passphrase: '{{ inventory_hostname }}'
+     cert_path: '{{ local_cert_path }}/{{ inventory_hostname }}.pem'
+     trust_path: '{{ local_cert_path }}/{{ inventory_hostname }}-trust.pem'
+     key_path: '{{ local_key_path }}/{{ inventory_hostname }}.pem'
+  notify: update-ca-trust
+  ignore_errors: yes
+
 # drive configuration
 - name: look for nvme devices
   command: nvme list
