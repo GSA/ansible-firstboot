@@ -12,3 +12,7 @@ windows_cert_path: "" # default certificate path
 # common
 local_key_path: "/etc/pki/tls/private" # default key path
 local_cert_path: "/etc/pki/tls/certs" # default certificate path
+
+# redhat
+redhat_agent_dependencies:
+  - {name: '/redhat/nvme-cli.rpm'}

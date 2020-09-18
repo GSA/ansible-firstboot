@@ -69,15 +69,6 @@
 - win_reboot:
   when: domain_state.reboot_required
 
-# acm certificate rotation checking
-- name: copy certificates to certificate store
-  win_certificate_store:
-    filetype: pem
-    path: '{{ item.name }}'
-    password: '{{ inventory_hostname }}'
-  with_items:
-    - '{{ windows_certificates }}'
-
 # add local debug user for testing and agent validation
 - name: create local user for debug purposes
   win_user:
