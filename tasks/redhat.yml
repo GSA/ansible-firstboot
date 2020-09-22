@@ -10,6 +10,14 @@
     name: '{{ inventory_hostname }}'
   register: hostname
 
+# temp to add dns ip until TGW resolved
+- name: adding dns resolution for artifactory repo
+  lineinfile:
+    dest: /etc/hosts
+    line: "{{ artifactory_ip }}   {{ artifactory_trusted_url }}"
+    state: present
+    insertafter: EOF
+
 # add epel repo from artifactory
 - name: install internal epel artifactory repo
   yum_repository:
@@ -21,21 +29,24 @@
 
 # add pip.conf to allow use of pypi artifactory
 - name: create pip.conf for use with pypi artifactory repo
-  file:
-    path: /etc/pip.conf
+  copy:
+    dest: /etc/pip.conf
+    force: yes
     content: |
       [global]
       index-url = {{ artifactory_pip_url }}
       trusted-host = {{ artifactory_trusted_url }}
+    owner: root
+    group: root
+    mode: 666
 
-# install python-pip, nvme-cli, & boto3
+# install python-pip, nvme-cli
 - name: install agent dependencies (redhat)
   yum:
     name: '{{ item.name }}'
     state: installed
     validate_certs: no
-    disable_plugin: "yum-rhn-plugin"
-    disablerepo: "redhat-rhui-client-config, redhat-rhui"
+    disable_plugin: "*"
   with_items:
     - '{{ redhat_agent_dependencies }}'
 

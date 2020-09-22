@@ -5,8 +5,8 @@ artifactory_epel_url: "" # arifactory url for epel installers
 artifactory_pip_url: "" # artifactory url for pip installers
 artifactory_trusted_url: "" # arifactory url for trusted installers
 redhat_agent_dependencies:
-  - {name: 'nvme-cli'}
-  - {name: 'python-pip'}
+  - {name: nvme-cli}
+  - {name: python-pip}
 
 # windows
 windows_domain_name: "" # domain dns name
@@ -18,3 +18,5 @@ windows_cert_path: "" # default certificate path
 # common
 local_key_path: "" # default key path
 local_cert_path: "" # default certificate path
+artifactory_ip:
+  "" # artifactory IP
