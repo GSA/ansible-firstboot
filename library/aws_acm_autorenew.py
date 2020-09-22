@@ -16,7 +16,7 @@ EXAMPLES = '''
 import ssl
 import boto3
 import pytz
-from datetime import datetime
+import datetime
 from ansible.module_utils.basic import *
 utc=pytz.UTC
 def find_cert(hostname):
@@ -42,7 +42,7 @@ def local_cert_not_before(path):
     d = 'Jan 1 00:00:00 1901 GMT'
     if cert_dict is not None and 'notBefore' in cert_dict:
         d = cert_dict['notBefore']
-    return datetime.strptime(d, '%b %d %H:%M:%S %Y %Z')
+    return datetime.datetime.strptime(d, '%b %d %H:%M:%S %Y %Z')
 def export_certificate(arn, data):
     acm = boto3.client('acm', region_name='us-east-1')
     response = acm.export_certificate(
@@ -68,7 +68,7 @@ def run(data):
     if ldate != None:
         rdate = remote_cert_not_before(cert_arn)
         if ldate < rdate:
-            print("upgrading certificate ldate: " + datetime.strftime(ldate, '%b %d %H:%M:%S %Y %Z')  + " rdate: " + datetime.strftime(rdate, '%b %d %H:%M:%S %Y %Z'))
+            print("upgrading certificate ldate: " + datetime.datetime.strftime(ldate, '%b %d %H:%M:%S %Y %Z')  + " rdate: " + datetime.datetime.strftime(rdate, '%b %d %H:%M:%S %Y %Z'))
             export_certificate(cert_arn, data)
             has_changed = True
     else:

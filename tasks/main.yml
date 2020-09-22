@@ -1,5 +1,4 @@
 ---
-
 - name: Current keypair
   authorized_key:
     user: "{{ ansible_user }}"

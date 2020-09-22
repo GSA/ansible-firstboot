@@ -1,4 +1,4 @@
 ---
-- name: update ca trust
+- name: update-ca-trust
   shell: update-ca-trust
   ignore_errors: yes

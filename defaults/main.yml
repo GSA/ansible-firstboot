@@ -1,6 +1,12 @@
 ---
 # redhat
 redhat_agent_dependencies_url: "" # artifactory url for installers
+artifactory_epel_url: "" # arifactory url for epel installers
+artifactory_pip_url: "" # artifactory url for pip installers
+artifactory_trusted_url: "" # arifactory url for trusted installers
+redhat_agent_dependencies:
+  - {name: 'nvme-cli'}
+  - {name: 'python-pip'}
 
 # windows
 windows_domain_name: "" # domain dns name
@@ -10,9 +16,5 @@ windows_domain_pass: "" # domain default password
 windows_cert_path: "" # default certificate path
 
 # common
-local_key_path: "/etc/pki/tls/private" # default key path
-local_cert_path: "/etc/pki/tls/certs" # default certificate path
-
-# redhat
-redhat_agent_dependencies:
-  - {name: '/redhat/nvme-cli.rpm'}
+local_key_path: "" # default key path
+local_cert_path: "" # default certificate path

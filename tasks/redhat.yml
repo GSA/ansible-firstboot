@@ -1,7 +1,7 @@
 # base configuration
 - name: wait for {{ inventory_hostname }}
   wait_for_connection:
-    delay: 60
+    delay: 30
     timeout: 300
 
 # hostname configuration
@@ -10,16 +10,41 @@
     name: '{{ inventory_hostname }}'
   register: hostname
 
-# dependency configuration
+# add epel repo from artifactory
+- name: install internal epel artifactory repo
+  yum_repository:
+    name: artifactory
+    description: Internal GSA Artifactory Repo for use with GRACE PaaS (RPMs)
+    baseurl: '{{ artifactory_epel_url }}'
+    gpgcheck: no
+    sslverify: no
+
+# add pip.conf to allow use of pypi artifactory
+- name: create pip.conf for use with pypi artifactory repo
+  file:
+    path: /etc/pip.conf
+    content: |
+      [global]
+      index-url = {{ artifactory_pip_url }}
+      trusted-host = {{ artifactory_trusted_url }}
+
+# install python-pip, nvme-cli, & boto3
 - name: install agent dependencies (redhat)
   yum:
-    name: '{{ artifactory_url }}{{ item.name }}'
+    name: '{{ item.name }}'
     state: installed
     validate_certs: no
     disable_plugin: "yum-rhn-plugin"
-    disablerepo: "*"
+    disablerepo: "redhat-rhui-client-config, redhat-rhui"
   with_items:
     - '{{ redhat_agent_dependencies }}'
+
+# install boto3, pytz from pip
+- name: install boto3 & pytz for use with acm certificate rotation
+  pip:
+    name:
+      - pytz
+      - boto3
 
 # acm certificate rotation checking
 - name: copy certificates to certificate store
