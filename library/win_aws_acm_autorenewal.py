@@ -6,12 +6,12 @@ module: win_aws_acm_autorenewal
 version_added: "0.0.1"
 short_description: Imports a host certificate from ACM PCA and renews it on-change.
 description:
-     - Searches AWS ACM for a certificate issued to the provided hostname, then 
+     - Searches AWS ACM for a certificate issued to the provided hostname, then
 	   exports the certificate, creates a PFX file locally, and imports the PFX
 	   into the Windows Certificate Store.
-     - The certificate, certificate chain, and private key are loading into the 
+     - The certificate, certificate chain, and private key are loading into the
 	   appopriate certificate stores to ensure the certificate is trusted natively.
-requirements: [ "openssl", "boto3" ]
+requirements: [ "openssl", "AWSPowershell" ]
 author: "GRACE Team (GSA)"
 options:
   hostname:
@@ -34,6 +34,11 @@ options:
       - The AWS region to use when making calls to ACM.
     required: false
 	default: 'us-east-1'
+  openssl:
+    description:
+      - The full path to openssl.exe for use with ACM
+    required: false
+    default: 'C:\Program Files\OpenSSL-Win64\bin\openssl.exe'
 '''
 
 EXAMPLES = r'''
@@ -43,4 +48,5 @@ EXAMPLES = r'''
 	passphrase: 'MySuperSecr3tP@s$w0rd!'
 	basepath: 'C:\certs'
 	region: 'us-west-1'
+    openssl: 'C:\Program Files\OpenSSL-Win64\bin\openssl.exe'
 '''

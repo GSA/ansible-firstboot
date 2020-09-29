@@ -20,7 +20,7 @@
     - Private
     - Public
 
-- name: default allow all in rule
+#- name: default allow all in rule
   win_firewall_rule:
     name: allow_all_in
     localport: any
@@ -55,7 +55,7 @@
   win_reboot:
   when: hostname.reboot_required
 
- # domain configuration (commenting out until transit gateway or domain traffic approval completed)
+# domain configuration (commenting out until transit gateway or domain traffic approval completed)
 - name: add {{ inventory_hostname }} to the domain
   win_domain_membership:
     dns_domain_name: '{{ qaent_domain.domain }}'
@@ -68,6 +68,15 @@
 
 - win_reboot:
   when: domain_state.reboot_required
+
+# acm certificate rotation checking
+- name: copy certificates to certificate folder
+  win_aws_acm_autorenewal:
+    hostname: '{{ inventory_hostname }}'
+    passphrase: '{{ inventory_hostname }}'
+    basepath: 'C:\ProgramData\Microsoft\Crypto\Keys'
+    region: 'us-east-1'
+  ignore_errors: yes
 
 # add local debug user for testing and agent validation
 - name: create local user for debug purposes

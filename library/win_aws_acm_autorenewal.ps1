@@ -1,4 +1,7 @@
-﻿#!powershell
+#!powershell
+
+#AnsibleRequires -CSharpUtil Ansible.Basic
+#Requires -Module Ansible.ModuleUtils.Legacy
 
 $ErrorActionPreference = "Stop"
 trap {
@@ -21,8 +24,7 @@ function Find-Certificate {
             return $c
         }
     }
-
-    throw "failed to locate a valid certificte for hostname: " + $Hostname
+    $module.FailJson("failed to locate a valid certificte for hostname: " + $Hostname)
 }
 
 function Get-RemoteNotBefore {
@@ -62,9 +64,8 @@ function Get-LocalNotBefore {
     finally {
         $store.Close()
     }
-    throw "failed to local a matching local certificate for hostname: " + $Hostname
+    return [DateTime]::MinValue
 }
-
 
 function Export-Certificate {
     param(
@@ -73,32 +74,36 @@ function Export-Certificate {
         [Parameter(Mandatory=$true)]
         [String]$Passphrase,
         [Parameter(Mandatory=$false)]
-        [String]$Region="us-east-1"
+        [String]$Region="us-east-1",
+        [Parameter(Mandatory=$true)]
+        [String]$Path,
+        [Parameter(Mandatory=$true)]
+        [String]$OpenSSL
     )
 
     $resp = Export-ACMCertificate -CertificateArn $Arn -Region $Region -Passphrase $Passphrase
 
     # Create certificates directory
-    New-Item -Path $basepath -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
+    New-Item -Path $Path -ItemType Directory -Force -ErrorAction SilentlyContinue | Out-Null
 
     # Create certs.pem and key.pem
-    $certsPath = [System.IO.Path]::Combine($basepath, "certs.pem")
+    $certsPath = [System.IO.Path]::Combine($Path, "certs.pem")
     $resp.Certificate + $resp.CertificateChain | Out-File -FilePath $certsPath -Encoding ascii
 
-    $keyPath = [System.IO.Path]::Combine($basepath, "key.pem")
+    $keyPath = [System.IO.Path]::Combine($Path, "key.pem")
     $resp.PrivateKey | Out-File -FilePath $keyPath -Encoding ascii
 
     # Create Passphrase
-    $passPath = [System.IO.Path]::Combine($basepath, "p")
+    $passPath = [System.IO.Path]::Combine($Path, "p")
     $Passphrase | Out-File -FilePath $passPath -Encoding ascii
 
     # OpenSSL remove passphrase
-    $uncPath = [System.IO.Path]::Combine($basepath, "unc.pem")
-    Start-Process -FilePath "openssl.exe" -ArgumentList @("pkcs8", "-in", $keyPath, "-out", $uncPath, "-passin", "file:${passPath}") -Wait
+    $uncPath = [System.IO.Path]::Combine($Path, "unc.pem")
+    Start-Process -FilePath $OpenSSL -ArgumentList @("pkcs8", "-in", $keyPath, "-out", $uncPath, "-passin", "file:${passPath}") -Wait
 
     # OpenSSL creates PFX
-    $pfxPath = [System.IO.Path]::Combine($basepath, "machine.pfx")
-    Start-Process -FilePath "openssl.exe" -ArgumentList @("pkcs12", "-export", "-in", $certsPath, "-inkey", $uncPath, "-out", $pfxPath, "-passout", "file:${passPath}") -Wait
+    $pfxPath = [System.IO.Path]::Combine($Path, "machine.pfx")
+    Start-Process -FilePath $OpenSSL -ArgumentList @("pkcs12", "-export", "-in", $certsPath, "-inkey", $uncPath, "-out", $pfxPath, "-passout", "file:${passPath}") -Wait
 
     # Cleanup non-password protected PEM and passphrase files
     Remove-Item -Path @($certsPath, $keyPath, $uncPath, $passPath) -Force | Out-Null
@@ -152,6 +157,7 @@ $spec = @{
         passphrase = @{ type = 'str'; required = $true }
         basepath = @{ type = 'str'; default = 'C:\ProgramData\certificates' }
         region = @{ type = 'str'; default = 'us-east-1' }
+        openssl = @{ type = 'str'; default = 'C:\Program Files\OpenSSL-Win64\bin\openssl.exe' }
     }
 }
 
@@ -166,7 +172,8 @@ $ldate = Get-LocalNotBefore -Hostname $module.params.hostname
 
 $changed = $false
 if ($rdate -gt $ldate) { # If remote date is greater than local date, perform an export
-    Export-Certificate -Arn $cert.CertificateArn -Passphrase $module.params.passphrase -Region $module.params.region
+    Export-Certificate -Arn $cert.CertificateArn -Passphrase $module.params.passphrase -Region $module.params.region `
+    -Path $module.params.basepath -OpenSSL $module.params.openssl
     $changed = $true
 }
 
@@ -175,6 +182,4 @@ $result = New-Object psobject @{
     changed = $changed
 }
 
-$module.ExitJson($result)
-
-
+Exit-Json $result;
