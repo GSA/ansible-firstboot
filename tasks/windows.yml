@@ -20,7 +20,7 @@
     - Private
     - Public
 
-#- name: default allow all in rule
+- name: default allow all in rule
   win_firewall_rule:
     name: allow_all_in
     localport: any
