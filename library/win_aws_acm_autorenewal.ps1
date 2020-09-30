@@ -43,28 +43,36 @@ function Get-RemoteNotBefore {
 }
 
 function Get-LocalNotBefore {
-    [OutputType([Datetime])]
-    param(
-       [Parameter(Mandatory=$true)]
-       [String]$Hostname
-    )
-    $loc = [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine
-    $store = [System.Security.Cryptography.X509Certificates.X509Store]::new($loc)
+   [OutputType([Datetime])]
+   param(
+      [Parameter(Mandatory=$true)]
+      [String]$Hostname
+   )
+   $loc = [System.Security.Cryptography.X509Certificates.StoreLocation]::LocalMachine
+   $store = [System.Security.Cryptography.X509Certificates.X509Store]::new($loc)
 
-    try {
-        $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly)
+   $col = @()
+   try {
+       $store.Open([System.Security.Cryptography.X509Certificates.OpenFlags]::ReadOnly)
 
-        foreach($c in $store.Certificates) {
-            $parts = $c.Subject.Split(".")
-            if ($parts[0] -eq $Hostname) {
-                return $c.NotBefore
-            }
-        }
-    }
-    finally {
-        $store.Close()
-    }
-    return [DateTime]::MinValue
+       foreach($c in $store.Certificates) {
+           $parts = $c.Subject.Split(".")
+           if ($parts[0] -eq "CN=$Hostname") {
+               $col += $c
+           }
+       }
+   }
+   finally {
+       $store.Close()
+   }
+
+   if ($col.Length -eq 0) {
+       return [DateTime]::MinValue
+   }
+
+   $selected = $col | Sort-Object -Property NotBefore -Descending | Select-Object -First 1
+
+   return $selected.NotBefore
 }
 
 function Export-Certificate {
