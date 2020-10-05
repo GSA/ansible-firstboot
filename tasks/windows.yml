@@ -58,11 +58,11 @@
 # domain configuration (commenting out until transit gateway or domain traffic approval completed)
 - name: add {{ inventory_hostname }} to the domain
   win_domain_membership:
-    dns_domain_name: '{{ qaent_domain.domain }}'
+    dns_domain_name: '{{ ent_domain.domain }}'
     hostname: '{{ inventory_hostname }}'
-    domain_admin_user: '{{ qaent_domain.username }}'
-    domain_admin_password: '{{ qaent_domain.password }}'
-    domain_ou_path: '{{ qaent_domain.ou }}'
+    domain_admin_user: '{{ ent_domain.username }}'
+    domain_admin_password: '{{ ent_domain.password }}'
+    domain_ou_path: '{{ ent_domain.ou }}'
     state: domain
   register: domain_state
 
