@@ -45,17 +45,29 @@
   win_timezone:
     timezone: Eastern Standard Time
 
-# hostname configuration
+# hostname configuration (change)
 - name: change hostname to {{ inventory_hostname }}
   win_hostname:
     name: '{{ inventory_hostname }}'
   register: hostname
 
+# hostname configuration (reboot)
 - name: reboot
   win_reboot:
   when: hostname.reboot_required
 
-# domain configuration (commenting out until transit gateway or domain traffic approval completed)
+# add local debug user for testing and agent validation
+- name: create local user for debug purposes
+  win_user:
+    name: '{{ local_users.username }}'
+    password: '{{ local_users.password }}'
+    state: present
+    description: "local debug user for testing and agent validation"
+    groups:
+      - '{{ local_users.group1 }}'
+      - '{{ local_users.group2 }}'
+
+# domain configuration (change)
 - name: add {{ inventory_hostname }} to the domain
   win_domain_membership:
     dns_domain_name: '{{ ent_domain.domain }}'
@@ -66,6 +78,7 @@
     state: domain
   register: domain_state
 
+# domain configuration (reboot)
 - win_reboot:
   when: domain_state.reboot_required
 
@@ -78,13 +91,6 @@
     region: 'us-east-1'
   ignore_errors: yes
 
-# add local debug user for testing and agent validation
-- name: create local user for debug purposes
-  win_user:
-    name: '{{ local_users.username }}'
-    password: '{{ local_users.password }}'
-    state: present
-    description: "local debug user for testing and agent validation"
-    groups:
-      - '{{ local_users.group1 }}'
-      - '{{ local_users.group2 }}'
+# initial gpo policy pull
+- name: refresh the GPO to ensure we have policy
+  win_command: gpupdate /force
