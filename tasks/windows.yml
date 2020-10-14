@@ -2,95 +2,56 @@
 - name: wait for {{ inventory_hostname }}
   wait_for_connection:
 
-# base configuration
-- name: set the default shell to powershell
-  win_regedit:
-    path: HKLM:\SOFTWARE\OpenSSH
-    name: DefaultShell
-    data: C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe
-    type: string
-    state: present
-
-# firewall configuration
-- name: enable firewall for domain, public and private profiles
-  win_firewall:
-    state: enabled
-    profiles:
-    - Domain
-    - Private
-    - Public
-
-- name: default allow all in rule
-  win_firewall_rule:
-    name: allow_all_in
-    localport: any
-    action: allow
-    direction: in
-    protocol: any
-    state: present
-    enabled: yes
-
-- name: default allow all out rule
-  win_firewall_rule:
-    name: allow_all_out
-    localport: any
-    action: allow
-    direction: out
-    protocol: any
-    state: present
-    enabled: yes
-
-# setting eastern timezone to avoid timestamp issues with the ENT domain
-- name: set timezone to 'Eastern Standard Time' (GMT-05:00)
-  win_timezone:
-    timezone: Eastern Standard Time
-
 # hostname configuration (change)
 - name: change hostname to {{ inventory_hostname }}
   win_hostname:
     name: '{{ inventory_hostname }}'
   register: hostname
+  tags:
+    - rename
 
 # hostname configuration (reboot)
 - name: reboot
   win_reboot:
   when: hostname.reboot_required
-
-# add local debug user for testing and agent validation
-- name: create local user for debug purposes
-  win_user:
-    name: '{{ local_users.username }}'
-    password: '{{ local_users.password }}'
-    state: present
-    description: "local debug user for testing and agent validation"
-    groups:
-      - '{{ local_users.group1 }}'
-      - '{{ local_users.group2 }}'
+  tags:
+    - rename
 
 # domain configuration (change)
-#- name: add {{ inventory_hostname }} to the domain
-#  win_domain_membership:
-#    dns_domain_name: '{{ ent_domain.domain }}'
-#    hostname: '{{ inventory_hostname }}'
-#    domain_admin_user: '{{ ent_domain.username }}'
-#    domain_admin_password: '{{ ent_domain.password }}'
-#    domain_ou_path: '{{ ent_domain.ou }}'
-#    state: domain
-#  register: domain_state
+- name: add {{ inventory_hostname }} to the domain
+  win_domain_membership:
+    dns_domain_name: '{{ ent_domain.domain }}'
+    hostname: '{{ inventory_hostname }}'
+    domain_admin_user: '{{ ent_domain.username }}'
+    domain_admin_password: '{{ ent_domain.password }}'
+    domain_ou_path: '{{ ent_domain.ou }}'
+    state: domain
+  register: domain_state
+  until: domain_state is success
+  retries: 15
+  delay: 10
+  tags:
+    - domain
 
 # domain configuration (reboot)
-#- win_reboot:
-#  when: domain_state.reboot_required
+- win_reboot:
+  when: domain_state.reboot_required
+  tags:
+    - domain
 
 # acm certificate rotation checking
 - name: copy certificates to certificate folder
   win_aws_acm_autorenewal:
     hostname: '{{ inventory_hostname }}'
     passphrase: '{{ inventory_hostname }}'
-    basepath: 'C:\ProgramData\Microsoft\Crypto\Keys'
-    region: 'us-east-1'
+    basepath: '{{ windows_acm_basepath }}'
+    region: '{{ aws_region }}'
   ignore_errors: yes
+  tags:
+    - acm
 
 # initial gpo policy pull
 - name: refresh the GPO to ensure we have policy
   win_command: gpupdate /force
+  tags:
+    - domain
