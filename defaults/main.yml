@@ -5,9 +5,7 @@ artifactory_epel_url: "" # arifactory url for epel installers
 artifactory_pip_url: "" # artifactory url for pip installers
 artifactory_trusted_url: "" # arifactory url for trusted installers
 redhat_agent_dependencies:
-  - {name: nvme-cli}
   - {name: python-pip}
-  - {name: orionsdk}
 
 # windows
 windows_domain_name: "" # domain dns name
@@ -16,7 +14,7 @@ windows_domain_user: "" # domain default user
 windows_domain_pass: "" # domain default password
 windows_cert_path: "" # default certificate path
 windows_agent_log: "" # default agent windows log directory
-windows_acm_basepath: "C:\\ProgramData\\Microsoft\\Crypto\\Keys"
+windows_acm_basepath: "" # default certificate storage for key rotation
 
 # common
 local_key_path: "" # default key path

@@ -28,6 +28,7 @@
     name: artifactory
     description: Internal GSA Artifactory Repo for use with GRACE PaaS (RPMs)
     baseurl: '{{ artifactory_epel_url }}'
+    mirrorlist: '{{ artifactory_url }}'
     gpgcheck: no
     sslverify: no
   tags:
@@ -48,23 +49,37 @@
   tags:
     - artifactory
 
-# install python-pip, nvme-cli
-- name: install agent dependencies (redhat)
+# install python-pip
+- name: install agent dependencies python-pip (redhat)
   yum:
     name: '{{ item.name }}'
     state: installed
     validate_certs: no
     disable_plugin: "*"
+    disablerepo: "*"
+    enablerepo: "artifactory"
   with_items:
     - '{{ redhat_agent_dependencies }}'
   tags:
     - artifactory
 
+# install python-pip
+- name: install agent dependencies nvme-cli (redhat)
+  yum:
+    name: '{{ artifactory_url }}/redhat/nvme-cli.rpm'
+    state: installed
+    disable_plugin: "*"
+    disablerepo: "*"
+    validate_certs: no
+  tags:
+    - artifactory
+
 # install boto3, pytz from pip
-- name: install boto3 & pytz for use with acm certificate rotation
+- name: install boto3, orionsdk & pytz for use with acm certificate rotation & solarwinds
   pip:
     name:
       - pytz
+      - orionsdk
       - boto3
   tags:
     - artifactory
