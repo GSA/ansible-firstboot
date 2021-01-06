@@ -9,128 +9,66 @@
   hostname:
     name: '{{ inventory_hostname }}'
   register: hostname
-  tags:
-    - rename
 
-# temp to add dns ip until TGW resolved
-- name: adding dns resolution for artifactory repo
-  lineinfile:
-    dest: /etc/hosts
-    line: "{{ artifactory_ip }}   {{ artifactory_trusted_url }}"
-    state: present
-    insertafter: EOF
-  tags:
-    - artifactory
+# /etc/resolve.conf configuration
+- name: configure resolv.conf
+  template:
+    src: "resolv.conf.j2"
+    dest: "/etc/resolv.conf"
+    mode: "0644"
+  become: true
 
-# add epel repo from artifactory
-- name: install internal epel artifactory repo
-  yum_repository:
-    name: artifactory
-    description: Internal GSA Artifactory Repo for use with GRACE PaaS (RPMs)
-    baseurl: '{{ artifactory_epel_url }}'
-    mirrorlist: '{{ artifactory_url }}'
-    gpgcheck: no
-    sslverify: no
-  tags:
-    - artifactory
+# fireeye install
+- name: install fireeye
+  shell:
+    cmd: rpm -ivh /utilities/vmtemplateinfo/fireeye/xagt.rpm
 
-# add pip.conf to allow use of pypi artifactory
-- name: create pip.conf for use with pypi artifactory repo
-  copy:
-    dest: /etc/pip.conf
-    force: yes
-    content: |
-      [global]
-      index-url = {{ artifactory_pip_url }}
-      trusted-host = {{ artifactory_trusted_url }}
-    owner: root
-    group: root
-    mode: 666
-  tags:
-    - artifactory
+- name: configure fireeye
+  shell:
+    cmd: /opt/fireeye/bin/xagt -i /utilities/vmtemplateinfo/fireeye/agent_config.json
 
-# install python-pip
-- name: install agent dependencies python-pip (redhat)
-  yum:
-    name: '{{ item.name }}'
-    state: installed
-    validate_certs: no
-    disable_plugin: "*"
-    disablerepo: "*"
-    enablerepo: "artifactory"
-  with_items:
-    - '{{ redhat_agent_dependencies }}'
-  tags:
-    - artifactory
+- name: start fireeye
+  shell:
+    cmd: systemctl start xagt
 
-# install python-pip
-- name: install agent dependencies nvme-cli (redhat)
-  yum:
-    name: '{{ artifactory_url }}/redhat/nvme-cli.rpm'
-    state: installed
-    disable_plugin: "*"
-    disablerepo: "*"
-    validate_certs: no
-  tags:
-    - artifactory
+- name: check status for fireeye
+  shell:
+    cmd: systemctl status xagt
 
-# install boto3, pytz from pip
-- name: install boto3, orionsdk & pytz for use with acm certificate rotation & solarwinds
-  pip:
-    name:
-      - pytz
-      - orionsdk
-      - boto3
-  tags:
-    - artifactory
+# nessus install
+- name: test tenable_tag nessus
+  shell:
+    cmd: test -f /etc/tenable_tag && /bin/rm /etc/tenable_tag
 
-# acm certificate rotation checking
-- name: copy certificates to certificate store
-  aws_acm_autorenew:
-     hostname: '{{ inventory_hostname }}'
-     passphrase: '{{ inventory_hostname }}'
-     cert_path: '{{ local_cert_path }}/{{ inventory_hostname }}.pem'
-     trust_path: '{{ local_cert_path }}/{{ inventory_hostname }}-trust.pem'
-     key_path: '{{ local_key_path }}/{{ inventory_hostname }}.pem'
-  notify: update-ca-trust
-  ignore_errors: yes
-  tags:
-    - acm
+- name: install nessus
+  shell:
+    cmd: rpm --upgrade --oldpackage --verbose /utilities/vmtemplateinfo/nessus/NessusAgent.rpm
 
-# drive configuration
-- name: look for nvme devices
-  command: nvme list
-  register: nvme_exist
-  changed_when: False
-  check_mode: no
-  tags:
-    - nvme_config
+- name: link nessus
+  shell:
+    cmd: /opt/nessus_agent/sbin/nessuscli agent link --key={{ agent_key }} --host={{ agent_host }} --port={{ agent_port }}
 
-- name: map-ebs-nvme automation
-  block:
-    - name: copy map-ebs-nvme
-      copy:
-        src: files/map-ebs-nvme.sh
-        dest: "/usr/local/bin/map-ebs-nvme"
-        owner: root
-        group: root
-        mode: 0755
-      tags:
-        - nvme_config
+- name: start nessus
+  shell:
+    cmd: systemctl start nessusagent.service
 
-    - name: configure map-ebs-nvme rules
-      copy:
-        src: files/map-ebs-nvme.rules
-        dest: "/etc/udev/rules.d/map-ebs-nvme.rules"
-        owner: root
-        group: root
-        mode: 0644
-      tags:
-        - nvme_config
+- name: check status for nessus
+  shell:
+    cmd: systemctl status nessusagent.service
 
-    - name: run map-ebs-nvme
-      command: /usr/local/bin/map-ebs-nvme
-      tags:
-        - nvme_config
+- name: check agent registration status for nessus
+  shell:
+    cmd: /opt/nessus_agent/sbin/nessuscli agent status
 
-  when: not(nvme_exist.stdout | regex_search('No NVMe devices detected.'))
+# endgame install
+- name: endgame install config
+  shell:
+    cmd: chmod 777 /utilities/vmtemplateinfo/endgame/SensorLinuxInstaller-Detect-Policy
+
+- name: endgame policy config
+  shell:
+    cmd: chmod 777 /utilities/vmtemplateinfo/endgame/SensorLinuxInstaller-Detect-Policy.cfg
+
+- name: endgame install
+  shell:
+    cmd: /utilities/vmtemplateinfo/endgame/SensorLinuxInstaller-Detect-Policy -c /utilities/vmtemplateinfo/endgame/SensorLinuxInstaller-Detect-Policy.cfg -k {{ endgame_key }} -l /utilities/vmtemplateinfo/endgame/install.log
