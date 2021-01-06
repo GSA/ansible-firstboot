@@ -36,10 +36,6 @@
     cmd: systemctl status xagt
 
 # nessus install
-- name: test tenable_tag nessus
-  shell:
-    cmd: test -f /etc/tenable_tag && /bin/rm /etc/tenable_tag
-
 - name: install nessus
   shell:
     cmd: rpm --upgrade --oldpackage --verbose /utilities/vmtemplateinfo/nessus/NessusAgent.rpm
